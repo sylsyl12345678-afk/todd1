@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a1b23">
+<title>湖北国土资源职业学院 · 三维校园 | 云上国土</title>
+<meta name="description" content="湖北国土资源职业学院三维交互校园：依据学校官方校园地图重绘，支持自由漫游、地标导览、昼夜光影与自动巡航。">
+<link rel="icon" type="image/png" href="assets/badge.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <div id="canvas-wrap"></div>
+  <div id="vignette"></div>
+
+  <!-- ================= 加载页 ================= -->
+  <div id="loader">
+    <div class="loader-bg"></div>
+    <div class="loader-inner">
+      <div class="loader-badge"><img src="assets/badge.png" alt="湖北国土资源职业学院校徽"></div>
+      <div class="loader-title">湖北国土资源职业学院</div>
+      <div class="loader-en">HUBEI LAND RESOURCES VOCATIONAL COLLEGE</div>
+      <div class="loader-sub">三维校园 · 云上国土</div>
+      <div class="loader-bar"><div class="loader-bar-fill" id="loader-fill"></div></div>
+      <div class="loader-row">
+        <span id="loader-tip">正在铺开校园…</span>
+        <span id="loader-pct">0%</span>
+      </div>
+      <div class="loader-motto">明德 · 修业 · 砺志 · 笃行</div>
+    </div>
+  </div>
+
+  <!-- ================= 顶栏 ================= -->
+  <header id="topbar" class="hud">
+    <div class="brand">
+      <div class="brand-badge"><img src="assets/badge.png" alt="校徽"></div>
+      <div class="brand-text">
+        <h1>湖北国土资源职业学院</h1>
+        <p>三维校园 · 云上国土 <span class="dot"></span> HBLRVC CAMPUS</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button id="btn-daynight" class="hbtn" title="昼夜切换（N）">
+        <span class="ico" id="ico-daynight">☀</span><span class="txt" id="txt-daynight">白昼</span>
+      </button>
+      <button id="btn-tour" class="hbtn" title="自动导览（T）">
+        <span class="ico">▶</span><span class="txt">自动导览</span>
+      </button>
+      <button id="btn-reset" class="hbtn" title="重置视角（R）">
+        <span class="ico">⌖</span><span class="txt">重置</span>
+      </button>
+      <button id="btn-about" class="hbtn" title="关于校园">
+        <span class="ico">ⓘ</span><span class="txt">关于</span>
+      </button>
+      <button id="btn-fullscreen" class="hbtn icon-only" title="全屏">⛶</button>
+    </div>
+  </header>
+
+  <!-- ================= 侧栏 ================= -->
+  <aside id="sidebar" class="hud">
+    <div class="side-head">
+      <div class="side-tabs">
+        <button class="side-tab active" data-tab="poi">校园地标</button>
+        <button class="side-tab" data-tab="info">校情速览</button>
+      </div>
+      <button id="btn-side-collapse" class="collapse-btn" title="收起">‹</button>
+    </div>
+
+    <div id="tab-poi" class="tab-pane active">
+      <div class="poi-filter" id="poi-filter"></div>
+      <div class="poi-list" id="poi-list"></div>
+      <div class="layer-box">
+        <div class="layer-title">场景图层</div>
+        <div class="layer-grid">
+          <label class="switch"><input type="checkbox" id="lyr-buildings" checked><span></span><em>建筑</em></label>
+          <label class="switch"><input type="checkbox" id="lyr-trees" checked><span></span><em>绿化</em></label>
+          <label class="switch"><input type="checkbox" id="lyr-water" checked><span></span><em>水系</em></label>
+          <label class="switch"><input type="checkbox" id="lyr-actors" checked><span></span><em>交通人物</em></label>
+          <label class="switch"><input type="checkbox" id="lyr-labels" checked><span></span><em>地标标注</em></label>
+          <label class="switch"><input type="checkbox" id="lyr-autocycle"><span></span><em>自动昼夜</em></label>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-info" class="tab-pane">
+      <div class="info-scroll" id="info-scroll"></div>
+    </div>
+  </aside>
+
+  <button id="panel-float">校园地标</button>
+
+  <div id="welcome-strip">
+    <span class="ws-title">欢迎来到湖北国土资源职业学院</span>
+    <span class="ws-line"></span>
+    <span class="ws-sub">丈量山河经纬 · 淬炼匠者初心</span>
+  </div>
+
+  <!-- ================= 地标标注 ================= -->
+  <div id="markers"></div>
+  <div id="tooltip"></div>
+
+  <!-- ================= 信息卡 ================= -->
+  <div id="info-card" class="hud">
+    <button class="card-close" id="card-close">✕</button>
+    <div class="card-cat" id="card-cat">教学科研</div>
+    <h2 id="card-title">图文信息中心</h2>
+    <p id="card-desc"></p>
+    <ul id="card-facts"></ul>
+    <div class="card-actions">
+      <button id="card-fly" class="primary-btn">飞往此处</button>
+      <button id="card-tour-start" class="ghost-btn">周边导览</button>
+    </div>
+    <div class="card-foot">数据来源：湖北国土资源职业学院官网 · 校园地图</div>
+  </div>
+
+  <!-- ================= 导览条 ================= -->
+  <div id="tour-bar" class="hud">
+    <div class="tour-step" id="tour-step">01 / 08</div>
+    <div class="tour-main">
+      <div class="tour-name" id="tour-name">校园全景</div>
+      <div class="tour-caption" id="tour-caption"></div>
+      <div class="tour-progress"><div id="tour-progress-fill"></div></div>
+    </div>
+    <div class="tour-actions">
+      <button id="tour-prev" title="上一步">‹</button>
+      <button id="tour-play" title="暂停/继续">❚❚</button>
+      <button id="tour-next" title="下一步">›</button>
+      <button id="tour-exit" title="退出导览">✕</button>
+    </div>
+  </div>
+
+  <!-- ================= 底栏 ================= -->
+  <footer id="bottombar" class="hud">
+    <div class="bb-left">
+      <div class="hint">
+        <span><b>拖动</b>旋转</span><i></i><span><b>滚轮</b>缩放</span><i></i><span><b>右键</b>平移</span><i></i><span><b>点击</b>地标</span>
+      </div>
+      <div class="credit">依据学校官方《校园地图》重绘 · 三维表达为艺术化处理，非精确测绘</div>
+    </div>
+    <div class="bb-right">
+      <div class="scalebar"><span id="scale-label">100 m</span><div class="scale-line"></div></div>
+      <div class="compass" id="compass">
+        <div class="compass-ring"></div>
+        <div class="compass-needle" id="compass-needle"></div>
+        <div class="compass-n">N</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= 关于 ================= -->
+  <div id="about-modal">
+    <div class="about-panel hud">
+      <button class="card-close" id="about-close">✕</button>
+      <div class="about-head">
+        <img src="assets/badge.png" alt="校徽">
+        <div>
+          <h2>湖北国土资源职业学院</h2>
+          <p>HUBEI LAND RESOURCES VOCATIONAL COLLEGE</p>
+        </div>
+      </div>
+      <div class="about-body" id="about-body"></div>
+      <div class="about-actions">
+        <button id="about-start" class="primary-btn">开始探索</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="js/ground-tex.js"></script>
+<script src="js/ground-data.js"></script>
+<script src="js/data.js"></script>
+<script src="js/buildings.js"></script>
+<script src="js/scene.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
